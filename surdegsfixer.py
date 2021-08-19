@@ -5,7 +5,7 @@ import re
 import shutil
 import PySimpleGUI as sg
 
-def surdegar(fil):
+def surdegar(fil, katalog):
     # Läser in csv-filen
     fil = open(fil)
     csvfil = csv.reader(fil, dialect='excel', delimiter=';')
@@ -118,7 +118,6 @@ def surdegar(fil):
             filnamn_element = etree.SubElement(handling_element, 'filnamn').text = filnamn
             handlingstyp_element = etree.SubElement(handling_element, 'handlingstyp').text = handlingstyp
             personuppgiftsklassning_element = etree.SubElement(handling_element,'personuppgiftsklassning').text = personuppgift
-            # TEST
             caselist.append(lastrow)
 
         # Loop om föregående rad tillhör samma ärende
@@ -167,8 +166,10 @@ def surdegar(fil):
             personuppgiftsklassning_element = etree.SubElement(handling_element,
                                                                'personuppgiftsklassning').text = personuppgift
 
-    xmlfil.write(f'output.xml', xml_declaration=True, encoding='utf-8', pretty_print=True)
-    print(f'antal rader som genererade xml {xmlrowcount}')
+    # Skapar xml-fil som lägger sig i den katalog som csv-filen finns.
+    folderpath = katalog
+    xmlfil.write(f'{folderpath}/output.xml', xml_declaration=True, encoding='utf-8', pretty_print=True)
+    print(f'antal rader som genererade xml {xmlrowcount} i filen output.xml')
 
     if len(fellista) > 0:
         felfil = open('fel.txt', 'w')
@@ -212,11 +213,13 @@ def Compare(li1, li2):
     diff = [i for i in li1 + li2 if i not in li1 or i not in li2]
     return diff
 
-def regexrattning(fil):
+def regexrattning(fil, katalog):
     file = open(fil)
     csvfil = csv.reader(file, dialect='excel', delimiter=';')
+    folderpath = katalog
 
-    outfile = open('out.csv', 'w')
+    # Skapar outputfilen corrected.csv som hamnar i samma katalog som originalfilen *.csv
+    outfile = open(f'{folderpath}/corrected.csv', 'w')
 
     rows = []
 
@@ -234,7 +237,7 @@ def regexrattning(fil):
             oldrow = f'{row[0]};{row[1]};{row[2]};{row[3]};{row[4]};{row[5]};{row[6]};\n'
             outfile.write(oldrow)
             continue
-    print('Färdig')
+    print('Färdig! Filen corrected.csv genererades.')
     
 
 def flyttafilertillrest(fil, katalog):
@@ -304,7 +307,14 @@ while True:
         if fil != None:
             try:
                 window.FindElement('_output_').Update('')
-                regexrattning(fil)
+                match = re.match('(.+)(\/.+?)$', fil)
+                katalog = match.group(1)
+                filtest = match.group(2)
+                filextension = filtest[-3:]
+                if filextension != 'csv':
+                    print('Fel filformat! Välj en ".csv"')
+                    continue 
+                regexrattning(fil,katalog)
             except FileNotFoundError:
                 print('Ingen fil vald')
 
@@ -314,6 +324,11 @@ while True:
             window.FindElement('_output_').Update('')
             match = re.match('(.+)(\/.+?)$', fil)
             katalog = match.group(1)
+            filtest = match.group(2)
+            filextension = filtest[-3:]
+            if filextension != 'csv':
+                print('Fel filformat! Välj en ".csv"')
+                continue 
             kollafiler(fil, katalog)
         except AttributeError:
             print('Ingen fil vald!')
@@ -323,7 +338,14 @@ while True:
         if fil != None:
             try:
                 window.FindElement('_output_').Update('')
-                surdegar(fil)
+                match = re.match('(.+)(\/.+?)$', fil)
+                katalog = match.group(1)
+                filtest = match.group(2)
+                filextension = filtest[-3:]
+                if filextension != 'csv':
+                    print('Fel filformat! Välj en ".csv"')
+                    continue 
+                surdegar(fil,katalog)
             except FileNotFoundError:
                 print('Ingen fil vald!')
 
@@ -334,6 +356,11 @@ while True:
                 window.FindElement('_output_').Update('')
                 match = re.match('(.+)(\/.+?)$', fil)
                 katalog = match.group(1)
+                filtest = match.group(2)
+                filextension = filtest[-3:]
+                if filextension != 'csv':
+                    print('Fel filformat! Välj en ".csv"')
+                    continue 
                 flyttafilertillrest(fil, katalog)
             except AttributeError:
                 print('Ingen fil vald!')
