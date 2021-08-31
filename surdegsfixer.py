@@ -172,7 +172,7 @@ def surdegar(fil, katalog):
     print(f'antal rader som genererade xml {xmlrowcount} i filen output.xml')
 
     if len(fellista) > 0:
-        felfil = open('fel.txt', 'w')
+        felfil = open(f'{folderpath}/fel.txt', 'w')
         felfil.write('\n'.join(fellista))
 
 def kollafiler(fil, katalog):
