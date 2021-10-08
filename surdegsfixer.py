@@ -278,6 +278,8 @@ def kolladisplayname():
     pass
 
 # GUI
+
+# Funktion för att skapa ett filväljarfönster
 def filvaljarfonster():
     layout2 = [[sg.Input(), sg.FileBrowse(key="-Fil-"), sg.Submit('Submit')]]
     window2 = sg.Window('Välj fil', layout2, size=(500, 100))
@@ -291,6 +293,26 @@ def filvaljarfonster():
             return fil
 
 
+# Funktion för att kontrollera filformat. Om allt är ok returneras en lista med sökväg till fil och sökväg till katalogen för filen. Annars returneras en tom lista.
+def formatchecker(fil):
+    lista = []
+    try:
+        window.FindElement('_output_').Update('')
+        match = re.match('(.+)(\/.+?)$', fil)
+        katalog = match.group(1)
+        filtest = match.group(2)
+        filextension = filtest[-3:]
+        if filextension != 'csv':
+            print('Fel filformat! Välj en ".csv"')
+            return lista
+        lista = [fil,katalog]
+        return lista
+
+    except AttributeError:
+        print('Ingen fil vald')
+        return lista
+
+
 sg.theme('LightGreen5')
 
 layout = [[sg.Button("Fixa beslutsnummer"), sg.Button("Kontrollera filer"), sg.Button("Flytta filer"), sg.Button("Skapa arkivpaket")],[sg.Output(size=(125, 300), key=('_output_'), font='Consolas 10')]]
@@ -298,69 +320,49 @@ layout = [[sg.Button("Fixa beslutsnummer"), sg.Button("Kontrollera filer"), sg.B
 
 window = sg.Window('Surdegsfixer', layout, size=(700, 600), element_justification='c')
 
+
+# Program-loop
 while True:
     event, values = window.read()
     if event == sg.WIN_CLOSED:
         break
     elif event == "Fixa beslutsnummer":
+        # Öppnar filväljarfönster.
         fil = filvaljarfonster()
         if fil != None:
-            try:
-                window.FindElement('_output_').Update('')
-                match = re.match('(.+)(\/.+?)$', fil)
-                katalog = match.group(1)
-                filtest = match.group(2)
-                filextension = filtest[-3:]
-                if filextension != 'csv':
-                    print('Fel filformat! Välj en ".csv"')
-                    continue 
-                regexrattning(fil,katalog)
-            except FileNotFoundError:
-                print('Ingen fil vald')
-
+            # Kontrollerar outputen från filväljaren.
+            formatlist = formatchecker(fil)
+            # Om formatchecker returnerar en lista som är komplett (två värden filsökväg och katalog). Startar aktuell funktion i detta fall regexrättningen.
+            if len(formatlist) == 2:
+                regexrattning(formatlist[0],formatlist[1])
+            # I alla andra fall fortsätter bara program-loopen.
+            else:
+                continue
+    
     elif event == "Kontrollera filer":
         fil = filvaljarfonster()
-        try:
-            window.FindElement('_output_').Update('')
-            match = re.match('(.+)(\/.+?)$', fil)
-            katalog = match.group(1)
-            filtest = match.group(2)
-            filextension = filtest[-3:]
-            if filextension != 'csv':
-                print('Fel filformat! Välj en ".csv"')
-                continue 
-            kollafiler(fil, katalog)
-        except AttributeError:
-            print('Ingen fil vald!')
-
+        if fil != None:
+            formatlist = formatchecker(fil)
+            if len(formatlist) == 2:
+                kollafiler(formatlist[0],formatlist[1])
+            else:
+                continue
+        
     elif event == "Skapa arkivpaket":
         fil = filvaljarfonster()
         if fil != None:
-            try:
-                window.FindElement('_output_').Update('')
-                match = re.match('(.+)(\/.+?)$', fil)
-                katalog = match.group(1)
-                filtest = match.group(2)
-                filextension = filtest[-3:]
-                if filextension != 'csv':
-                    print('Fel filformat! Välj en ".csv"')
-                    continue 
-                surdegar(fil,katalog)
-            except FileNotFoundError:
-                print('Ingen fil vald!')
+            formatlist = formatchecker(fil)
+            if len(formatlist) == 2:
+                surdegar(formatlist[0],formatlist[1])
+            else:
+                continue
 
     elif event == "Flytta filer":
         fil = filvaljarfonster()
         if fil != None:
-            try:
-                window.FindElement('_output_').Update('')
-                match = re.match('(.+)(\/.+?)$', fil)
-                katalog = match.group(1)
-                filtest = match.group(2)
-                filextension = filtest[-3:]
-                if filextension != 'csv':
-                    print('Fel filformat! Välj en ".csv"')
-                    continue 
-                flyttafilertillrest(fil, katalog)
-            except AttributeError:
-                print('Ingen fil vald!')
+            formatlist = formatchecker(fil)
+            if len(formatlist) == 2:
+                flyttafilertillrest(formatlist[0],formatlist[1])
+            else:
+                continue
+        
